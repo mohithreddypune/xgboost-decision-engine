@@ -1,0 +1,45 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: decision-engine-orchestrator
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/decisions}
+    username: ${SPRING_DATASOURCE_USERNAME:decisions}
+    password: ${SPRING_DATASOURCE_PASSWORD:decisions}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc.time_zone: UTC
+    open-in-view: false
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: decision-engine
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+decision-engine:
+  topic: transactions
+  ml-service-url: ${ML_SERVICE_URL:http://localhost:8000}
+  thresholds:
+    block: 0.90
+    flag: 0.60
+    step-up: 0.20
+
+logging:
+  level:
+    root: INFO
+    com.decisionengine: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
