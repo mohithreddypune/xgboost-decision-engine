@@ -77,6 +77,51 @@ class ModelStore:
         elapsed = (time.perf_counter() - t0) * 1000.0
         return Prediction(score=score, model_version=version, latency_ms=elapsed)
 
+    def predict_batch(self, rows: list[list[float]]) -> tuple[list[float], str, float]:
+        """Score N rows in a single DMatrix — much faster than N predict() calls."""
+        with self._lock:
+            booster = self._booster
+            version = self._version
+        if booster is None:
+            raise RuntimeError("model not loaded")
+
+        arr = np.asarray(rows, dtype=float)
+        dmat = xgb.DMatrix(arr, feature_names=list(FEATURE_NAMES))
+        t0 = time.perf_counter()
+        scores = booster.predict(dmat).tolist()
+        elapsed = (time.perf_counter() - t0) * 1000.0
+        return scores, version, elapsed
+
+    def explain(self, features: Iterable[float]) -> dict:
+        """Per-feature SHAP-style contributions using XGBoost's pred_contribs.
+
+        Returns the raw log-odds contribution for each feature. The last value
+        is the model's bias (base value). Sum of all + bias = raw margin.
+        """
+        with self._lock:
+            booster = self._booster
+            version = self._version
+        if booster is None:
+            raise RuntimeError("model not loaded")
+
+        feature_values = list(features)
+        arr = np.asarray(feature_values, dtype=float).reshape(1, -1)
+        dmat = xgb.DMatrix(arr, feature_names=list(FEATURE_NAMES))
+        # pred_contribs returns shape (1, n_features+1) — last col is bias
+        contribs = booster.predict(dmat, pred_contribs=True)[0]
+        bias = float(contribs[-1])
+        per_feature = [float(c) for c in contribs[:-1]]
+        # also need the actual probability score for context
+        score = float(booster.predict(dmat)[0])
+
+        return {
+            "score": score,
+            "version": version,
+            "bias": bias,
+            "feature_values": feature_values,
+            "contributions": per_feature,
+        }
+
 
 # module-level singleton
 MODEL = ModelStore()

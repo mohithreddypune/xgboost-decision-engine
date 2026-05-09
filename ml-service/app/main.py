@@ -13,7 +13,11 @@ from .drift import MONITOR
 from .retrain import start_scheduler, trigger_retrain, last_result
 from .scorer import MODEL
 from .schemas import (
+    BatchScoreRequest,
+    BatchScoreResponse,
     DriftResponse,
+    ExplainResponse,
+    FeatureContribution,
     HealthResponse,
     RetrainResponse,
     ScoreRequest,
@@ -122,6 +126,119 @@ def last_retrain() -> RetrainResponse:
 @app.get("/features")
 def features() -> dict:
     return {"features": list(FEATURE_NAMES)}
+
+
+@app.post("/score-batch", response_model=BatchScoreResponse)
+def score_batch(req: BatchScoreRequest) -> BatchScoreResponse:
+    """Score many transactions in a single request — used by the document analyzer."""
+    if not MODEL.is_ready():
+        raise HTTPException(status_code=503, detail="model not ready")
+    if not req.transactions:
+        return BatchScoreResponse(
+            model_version=MODEL.version, count=0, latency_ms=0.0, scores=[]
+        )
+
+    rows = [
+        [
+            t.amount,
+            t.merchant_category,
+            t.hour_of_day,
+            t.is_weekend,
+            t.txn_count_1h,
+            t.amount_zscore_user,
+            t.device_risk_score,
+            t.geo_distance_km,
+        ]
+        for t in req.transactions
+    ]
+    scores, version, latency = MODEL.predict_batch(rows)
+    # observe each row for drift
+    for r in rows:
+        MONITOR.observe(r)
+
+    return BatchScoreResponse(
+        model_version=version,
+        count=len(scores),
+        latency_ms=round(latency, 3),
+        scores=[
+            ScoreResponse(
+                transaction_id=req.transactions[i].transaction_id,
+                score=scores[i],
+                model_version=version,
+                latency_ms=round(latency / max(len(scores), 1), 3),
+            )
+            for i in range(len(scores))
+        ],
+    )
+
+
+def _build_narrative(score: float, contribs: list[FeatureContribution]) -> str:
+    """Plain-English explanation suitable for analysts and regulators."""
+    pos = sorted([c for c in contribs if c.contribution > 0],
+                 key=lambda c: -c.contribution)[:3]
+    neg = sorted([c for c in contribs if c.contribution < 0],
+                 key=lambda c: c.contribution)[:2]
+
+    if score >= 0.90:
+        verdict = "blocked as fraud"
+    elif score >= 0.60:
+        verdict = "flagged for review"
+    elif score >= 0.20:
+        verdict = "sent for step-up verification"
+    else:
+        verdict = "approved as low-risk"
+
+    parts = [f"This transaction was {verdict} (score {score:.3f})."]
+    if pos:
+        reasons = ", ".join([
+            f"{c.feature}={c.value:.3g} (contribution +{c.contribution:.3f})"
+            for c in pos
+        ])
+        parts.append(f"The strongest fraud signals were: {reasons}.")
+    if neg and score < 0.5:
+        reasons = ", ".join([
+            f"{c.feature}={c.value:.3g}" for c in neg
+        ])
+        parts.append(f"Mitigating signals: {reasons}.")
+    return " ".join(parts)
+
+
+@app.post("/explain", response_model=ExplainResponse)
+def explain(req: ScoreRequest) -> ExplainResponse:
+    """SHAP-style per-feature contributions for a single transaction."""
+    if not MODEL.is_ready():
+        raise HTTPException(status_code=503, detail="model not ready")
+
+    feature_vec = [
+        req.amount,
+        req.merchant_category,
+        req.hour_of_day,
+        req.is_weekend,
+        req.txn_count_1h,
+        req.amount_zscore_user,
+        req.device_risk_score,
+        req.geo_distance_km,
+    ]
+    result = MODEL.explain(feature_vec)
+    contribs = [
+        FeatureContribution(
+            feature=name,
+            value=float(result["feature_values"][i]),
+            contribution=float(result["contributions"][i]),
+            direction="fraud" if result["contributions"][i] > 0 else "clean",
+        )
+        for i, name in enumerate(FEATURE_NAMES)
+    ]
+    narrative = _build_narrative(result["score"], contribs)
+
+    return ExplainResponse(
+        transaction_id=req.transaction_id,
+        score=result["score"],
+        model_version=result["version"],
+        base_value=result["bias"],
+        contributions=contribs,
+        narrative=narrative,
+    )
 
 
 if __name__ == "__main__":
