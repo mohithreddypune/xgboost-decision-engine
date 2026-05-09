@@ -1,7 +1,7 @@
 """Request / response models for the ML service."""
 from __future__ import annotations
 
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -45,3 +45,30 @@ class RetrainResponse(BaseModel):
     val_auc: Optional[float] = None
     train_seconds: Optional[float] = None
     reason: Optional[str] = None
+
+
+class BatchScoreRequest(BaseModel):
+    transactions: List[ScoreRequest]
+
+
+class BatchScoreResponse(BaseModel):
+    model_version: str
+    count: int
+    latency_ms: float
+    scores: List[ScoreResponse]
+
+
+class FeatureContribution(BaseModel):
+    feature: str
+    value: float
+    contribution: float  # positive = pushes toward fraud, negative = away
+    direction: str       # "fraud" or "clean"
+
+
+class ExplainResponse(BaseModel):
+    transaction_id: str
+    score: float
+    model_version: str
+    base_value: float    # the model's average baseline log-odds
+    contributions: List[FeatureContribution]
+    narrative: str       # plain-English explanation
