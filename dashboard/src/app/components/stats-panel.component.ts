@@ -4,32 +4,43 @@ import { Subscription, interval } from 'rxjs';
 import { startWith, switchMap } from 'rxjs/operators';
 import { DecisionService } from '../services/decision.service';
 import { ActionStats } from '../models/decision';
+import { AnimatedCounterComponent } from './animated-counter.component';
 
 @Component({
   selector: 'app-stats-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AnimatedCounterComponent],
   template: `
     <section class="grid">
       <div class="card">
         <div class="card-label">Decisions / 60 min</div>
-        <div class="card-value">{{ stats?.totalDecisions ?? 0 }}</div>
+        <div class="card-value">
+          <app-animated-counter [value]="stats?.totalDecisions ?? 0"></app-animated-counter>
+        </div>
       </div>
       <div class="card block">
         <div class="card-label">Blocked</div>
-        <div class="card-value">{{ stats?.counts?.['BLOCK'] ?? 0 }}</div>
+        <div class="card-value">
+          <app-animated-counter [value]="stats?.counts?.['BLOCK'] ?? 0"></app-animated-counter>
+        </div>
       </div>
       <div class="card flag">
         <div class="card-label">Flagged</div>
-        <div class="card-value">{{ stats?.counts?.['FLAG'] ?? 0 }}</div>
+        <div class="card-value">
+          <app-animated-counter [value]="stats?.counts?.['FLAG'] ?? 0"></app-animated-counter>
+        </div>
       </div>
       <div class="card stepup">
         <div class="card-label">Step-up</div>
-        <div class="card-value">{{ stats?.counts?.['STEP_UP'] ?? 0 }}</div>
+        <div class="card-value">
+          <app-animated-counter [value]="stats?.counts?.['STEP_UP'] ?? 0"></app-animated-counter>
+        </div>
       </div>
       <div class="card approve">
         <div class="card-label">Approved</div>
-        <div class="card-value">{{ stats?.counts?.['APPROVE'] ?? 0 }}</div>
+        <div class="card-value">
+          <app-animated-counter [value]="stats?.counts?.['APPROVE'] ?? 0"></app-animated-counter>
+        </div>
       </div>
     </section>
   `,
