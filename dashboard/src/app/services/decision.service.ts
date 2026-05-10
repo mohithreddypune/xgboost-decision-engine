@@ -5,6 +5,7 @@ import { switchMap, startWith } from 'rxjs/operators';
 import { Client, IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { ActionStats, DecisionEvent, DriftReport } from '../models/decision';
+import { ToastService } from './toast.service';
 
 @Injectable({ providedIn: 'root' })
 export class DecisionService {
@@ -12,7 +13,7 @@ export class DecisionService {
   private readonly connected$ = new BehaviorSubject<boolean>(false);
   private client?: Client;
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private toasts: ToastService) {
     this.connect();
   }
 
@@ -59,6 +60,18 @@ export class DecisionService {
             this.feed$.next(event);
           } catch {
             /* ignore malformed */
+          }
+        });
+        this.client!.subscribe('/topic/alerts', (msg: IMessage) => {
+          try {
+            const a = JSON.parse(msg.body);
+            this.toasts.push({
+              severity: a.severity || 'warning',
+              title: a.title,
+              body: a.body
+            });
+          } catch {
+            /* ignore */
           }
         });
       },

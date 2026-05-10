@@ -3,16 +3,18 @@ import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { DecisionService } from '../services/decision.service';
 import { DecisionEvent } from '../models/decision';
+import { ExplainModalComponent } from './explain-modal.component';
+import { KeyboardService } from '../services/keyboard.service';
 
 @Component({
   selector: 'app-feed',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, DatePipe],
+  imports: [CommonModule, DecimalPipe, DatePipe, ExplainModalComponent],
   template: `
     <div class="panel">
       <div class="panel-head">
         <h2>Live decision feed</h2>
-        <span class="muted">Streaming via STOMP/WebSocket</span>
+        <span class="muted">click any row to see "why?" · streaming via STOMP/WebSocket</span>
       </div>
       <table>
         <thead>
@@ -28,7 +30,8 @@ import { DecisionEvent } from '../models/decision';
         </thead>
         <tbody>
           <tr *ngFor="let e of items; trackBy: trackById"
-              [class.flash]="e.id === justAddedId">
+              [class.flash]="e.id === justAddedId"
+              (click)="select(e)">
             <td>{{ e.createdAt | date:'HH:mm:ss' }}</td>
             <td class="mono">{{ e.transactionId }}</td>
             <td>\${{ e.amount | number:'1.2-2' }}</td>
@@ -43,6 +46,8 @@ import { DecisionEvent } from '../models/decision';
         </tbody>
       </table>
     </div>
+
+    <app-explain-modal [decisionId]="explainId" (close)="explainId = null"></app-explain-modal>
   `,
   styles: [`
     .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; }
@@ -61,9 +66,12 @@ import { DecisionEvent } from '../models/decision';
 export class FeedComponent implements OnInit, OnDestroy {
   items: DecisionEvent[] = [];
   justAddedId: number | null = null;
-  private feedSub?: Subscription;
+  explainId: number | null = null;
 
-  constructor(private svc: DecisionService) {}
+  private feedSub?: Subscription;
+  private kbSub?: Subscription;
+
+  constructor(private svc: DecisionService, private kb: KeyboardService) {}
 
   ngOnInit(): void {
     this.svc.recent().subscribe(rows => (this.items = rows));
@@ -71,9 +79,16 @@ export class FeedComponent implements OnInit, OnDestroy {
       this.items = [e, ...this.items].slice(0, 100);
       this.justAddedId = e.id;
     });
+    this.kbSub = this.kb.events$.subscribe(e => {
+      if (e === 'Escape') this.explainId = null;
+    });
   }
 
   trackById(_: number, e: DecisionEvent): number { return e.id; }
+  select(e: DecisionEvent): void { this.explainId = e.id; }
 
-  ngOnDestroy(): void { this.feedSub?.unsubscribe(); }
+  ngOnDestroy(): void {
+    this.feedSub?.unsubscribe();
+    this.kbSub?.unsubscribe();
+  }
 }
