@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: decision-engine-orchestrator
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/decisions}
     username: ${SPRING_DATASOURCE_USERNAME:decisions}
