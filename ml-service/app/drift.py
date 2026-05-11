@@ -10,6 +10,7 @@ import json
 import logging
 import math
 import threading
+import time
 from collections import deque
 from pathlib import Path
 from typing import Deque, Iterable
@@ -46,6 +47,9 @@ class DriftMonitor:
         self._lock = threading.RLock()
         self._window: Deque[list[float]] = deque(maxlen=window_size)
         self._reference: dict | None = None
+        # 24h rolling history of (timestamp, max_psi, per_feature) — sampled every 5min
+        self._history: Deque[dict] = deque(maxlen=288)  # 288 = 5min * 288 = 24h
+        self._last_history_ts: float = 0.0
 
     def reference_loaded(self) -> bool:
         return self._reference is not None
@@ -91,12 +95,31 @@ class DriftMonitor:
             per_feature[name] = round(_psi(expected, actual), 4)
 
         max_psi = max(per_feature.values()) if per_feature else 0.0
-        return {
+        result = {
             "max_psi": round(max_psi, 4),
             "per_feature": per_feature,
             "samples": len(snapshot),
             "drifted": max_psi >= SETTINGS.drift_psi_threshold,
         }
+        self._record_history(result)
+        return result
+
+    def _record_history(self, current: dict) -> None:
+        now = time.time()
+        # Sample every 5 minutes to fill the 24h ring buffer
+        if now - self._last_history_ts < 300:
+            return
+        with self._lock:
+            self._last_history_ts = now
+            self._history.append({
+                "ts": int(now * 1000),
+                "max_psi": current["max_psi"],
+                "per_feature": current["per_feature"],
+            })
+
+    def history(self) -> list[dict]:
+        with self._lock:
+            return list(self._history)
 
 
 MONITOR = DriftMonitor()
