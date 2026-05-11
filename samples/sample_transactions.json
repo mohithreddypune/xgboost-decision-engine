@@ -1,0 +1,14 @@
+{
+  "transactions": [
+    { "transaction_id": "JS001", "amount": 50.00,   "merchant_category": 5,  "hour_of_day": 14, "is_weekend": 0, "txn_count_1h": 1, "amount_zscore_user": 0.0,  "device_risk_score": 0.05, "geo_distance_km": 1.0 },
+    { "transaction_id": "JS002", "amount": 4500.00, "merchant_category": 13, "hour_of_day": 2,  "is_weekend": 0, "txn_count_1h": 8, "amount_zscore_user": 4.0,  "device_risk_score": 0.95, "geo_distance_km": 95.0 },
+    { "transaction_id": "JS003", "amount": 125.00,  "merchant_category": 7,  "hour_of_day": 16, "is_weekend": 1, "txn_count_1h": 2, "amount_zscore_user": 0.5,  "device_risk_score": 0.12, "geo_distance_km": 4.5 },
+    { "transaction_id": "JS004", "amount": 880.00,  "merchant_category": 13, "hour_of_day": 1,  "is_weekend": 0, "txn_count_1h": 5, "amount_zscore_user": 2.8,  "device_risk_score": 0.72, "geo_distance_km": 65.0 },
+    { "transaction_id": "JS005", "amount": 35.50,   "merchant_category": 3,  "hour_of_day": 11, "is_weekend": 0, "txn_count_1h": 1, "amount_zscore_user": -0.2, "device_risk_score": 0.06, "geo_distance_km": 1.5 },
+    { "transaction_id": "JS006", "amount": 3850.00, "merchant_category": 13, "hour_of_day": 3,  "is_weekend": 0, "txn_count_1h": 7, "amount_zscore_user": 4.2,  "device_risk_score": 0.91, "geo_distance_km": 102.0 },
+    { "transaction_id": "JS007", "amount": 78.25,   "merchant_category": 6,  "hour_of_day": 13, "is_weekend": 0, "txn_count_1h": 1, "amount_zscore_user": 0.1,  "device_risk_score": 0.08, "geo_distance_km": 2.2 },
+    { "transaction_id": "JS008", "amount": 245.00,  "merchant_category": 8,  "hour_of_day": 22, "is_weekend": 0, "txn_count_1h": 3, "amount_zscore_user": 1.5,  "device_risk_score": 0.40, "geo_distance_km": 18.0 },
+    { "transaction_id": "JS009", "amount": 92.40,   "merchant_category": 4,  "hour_of_day": 17, "is_weekend": 1, "txn_count_1h": 1, "amount_zscore_user": 0.4,  "device_risk_score": 0.10, "geo_distance_km": 3.8 },
+    { "transaction_id": "JS010", "amount": 5200.00, "merchant_category": 13, "hour_of_day": 0,  "is_weekend": 0, "txn_count_1h": 9, "amount_zscore_user": 5.0,  "device_risk_score": 0.97, "geo_distance_km": 130.0 }
+  ]
+}
