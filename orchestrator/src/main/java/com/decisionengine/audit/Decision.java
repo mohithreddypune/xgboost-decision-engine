@@ -49,6 +49,10 @@ public class Decision {
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
+    @Column private Double lat;
+    @Column private Double lon;
+    @Column(length = 64) private String city;
+
     public Decision() { }
 
     public Long getId() { return id; }
@@ -66,4 +70,10 @@ public class Decision {
     public void setLatencyMs(double v) { this.latencyMs = v; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant v) { this.createdAt = v; }
+    public Double getLat() { return lat; }
+    public void setLat(Double v) { this.lat = v; }
+    public Double getLon() { return lon; }
+    public void setLon(Double v) { this.lon = v; }
+    public String getCity() { return city; }
+    public void setCity(String v) { this.city = v; }
 }

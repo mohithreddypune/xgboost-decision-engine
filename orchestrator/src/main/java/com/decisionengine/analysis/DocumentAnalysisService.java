@@ -34,19 +34,22 @@ public class DocumentAnalysisService {
     private final AnomalyDetector anomalies;
     private final DecisionRouter router;
     private final ExplainClient explainer;
+    private final ReportCache cache;
 
     public DocumentAnalysisService(FileValidator validator,
                                    DocumentParser parser,
                                    BatchScoringClient batch,
                                    AnomalyDetector anomalies,
                                    DecisionRouter router,
-                                   ExplainClient explainer) {
+                                   ExplainClient explainer,
+                                   ReportCache cache) {
         this.validator = validator;
         this.parser = parser;
         this.batch = batch;
         this.anomalies = anomalies;
         this.router = router;
         this.explainer = explainer;
+        this.cache = cache;
     }
 
     public AnalysisReport analyze(MultipartFile file) {
@@ -154,7 +157,7 @@ public class DocumentAnalysisService {
 
         long elapsed = System.currentTimeMillis() - start;
 
-        return new AnalysisReport(
+        AnalysisReport report = new AnalysisReport(
                 fileId,
                 filename,
                 new AnalysisReport.Validity(true, v.format(), v.sizeBytes(),
@@ -169,6 +172,8 @@ public class DocumentAnalysisService {
                 anomList,
                 elapsed
         );
+        cache.put(report);
+        return report;
     }
 
     private static AnalysisReport invalidReport(String fileId, String filename,

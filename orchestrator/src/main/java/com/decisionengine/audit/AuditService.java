@@ -24,6 +24,9 @@ public class AuditService {
         d.setModelVersion(score.modelVersion());
         d.setAction(action);
         d.setLatencyMs(score.latencyMs());
+        d.setLat(txn.lat());
+        d.setLon(txn.lon());
+        d.setCity(txn.city());
         return repo.save(d);
     }
 }

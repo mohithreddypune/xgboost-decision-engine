@@ -37,6 +37,20 @@ decision-engine:
     flag: 0.60
     step-up: 0.20
 
+# AI Co-Pilot — local mode by default. To enable LLM mode, set COPILOT_API_KEY
+# and implement askLlm() in CopilotController.java.
+copilot:
+  provider: ${COPILOT_PROVIDER:local}      # local | anthropic | openai
+  api-key:  ${COPILOT_API_KEY:}
+
+# OAuth — disabled by default. To enable GitHub OAuth, set the env vars below
+# and uncomment the spring.security section as documented in SECURITY.md.
+oauth:
+  enabled: ${OAUTH_ENABLED:false}
+  github:
+    client-id:     ${OAUTH_GITHUB_CLIENT_ID:}
+    client-secret: ${OAUTH_GITHUB_CLIENT_SECRET:}
+
 logging:
   level:
     root: INFO
