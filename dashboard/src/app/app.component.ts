@@ -40,6 +40,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.kbSub = this.kb.events$.subscribe(e => {
       if (e === 'g f') this.router.navigateByUrl('/dashboard');
       else if (e === 'g u') this.router.navigateByUrl('/upload');
+      else if (e === 'g c') this.router.navigateByUrl('/copilot');
       else if (e === 'g d') this.router.navigateByUrl('/dashboard');
       else if (e === 'r') this.decisions.triggerRetrain().subscribe();
     });
