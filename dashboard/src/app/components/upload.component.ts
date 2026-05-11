@@ -50,10 +50,15 @@ import { AnimatedCounterComponent } from './animated-counter.component';
           <div class="verdict {{ report.verdict }}">
             <span class="verdict-icon">{{ verdictIcon() }}</span>
             <div>
-              <div>{{ report.verdict }}</div>
-              <div class="verdict-sub">Risk score {{ report.fraudRiskScore | number:'1.3-3' }} · {{ report.validity.rowCount }} rows</div>
+              <div class="verdict-main">{{ report.verdict }}</div>
+              <div class="verdict-sub">Risk score {{ report.fraudRiskScore | number:'1.3-3' }} · {{ report.validity.rowCount }} rows · Analyzed in {{ report.analysisTimeMs }} ms</div>
             </div>
-            <button class="btn-ghost reset" (click)="reset()">Analyze another file</button>
+            <div class="verdict-actions">
+              <a class="btn btn-ghost" [href]="pdfUrl()" target="_blank">
+                <span>⬇</span> PDF report
+              </a>
+              <button class="btn btn-ghost" (click)="reset()">New file</button>
+            </div>
           </div>
 
           <div class="cards">
@@ -194,10 +199,9 @@ import { AnimatedCounterComponent } from './animated-counter.component';
     .loading-skel { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
 
     .result-grid { display: grid; gap: 18px; }
-    .verdict { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 18px 20px; }
-    .verdict-icon { font-size: 32px; }
-    .verdict-sub { color: var(--muted); font-size: 12px; font-weight: 500; margin-top: 2px; }
-    .reset { background: transparent; }
+    .verdict-actions { display: flex; gap: 8px; }
+    .verdict-actions .btn { display: inline-flex; align-items: center; gap: 6px; }
+    .verdict-actions a { text-decoration: none; }
 
     .cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
     .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
@@ -305,6 +309,10 @@ export class UploadComponent {
   reset(): void {
     this.report = undefined;
     this.filename = '';
+  }
+
+  pdfUrl(): string {
+    return this.report ? `/api/analyze/report/${this.report.fileId}/pdf` : '#';
   }
 
   verdictIcon(): string {

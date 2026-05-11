@@ -32,7 +32,7 @@ export class KeyboardService {
     this.buffer = (this.buffer + ' ' + key).trim();
     if (this.bufferTimer) window.clearTimeout(this.bufferTimer);
     // Emit longer sequences if recognized
-    const recognized = ['g f', 'g d', 'g u'];
+    const recognized = ['g f', 'g d', 'g u', 'g c'];
     if (recognized.includes(this.buffer)) {
       this.seq$.next(this.buffer);
       this.buffer = '';
