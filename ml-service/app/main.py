@@ -10,6 +10,7 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException
 
 from .config import FEATURE_NAMES, SETTINGS
 from .drift import MONITOR
+from .perf import PERF
 from .retrain import start_scheduler, trigger_retrain, last_result
 from .scorer import MODEL
 from .schemas import (
@@ -90,6 +91,7 @@ def score(req: ScoreRequest) -> ScoreResponse:
     ]
     pred = MODEL.predict(feature_vec)
     MONITOR.observe(feature_vec)
+    PERF.record(pred.latency_ms)
     return ScoreResponse(
         transaction_id=req.transaction_id,
         score=pred.score,
@@ -126,6 +128,18 @@ def last_retrain() -> RetrainResponse:
 @app.get("/features")
 def features() -> dict:
     return {"features": list(FEATURE_NAMES)}
+
+
+@app.get("/drift/history")
+def drift_history() -> dict:
+    """24h ring buffer of drift snapshots (sampled every 5 minutes)."""
+    return {"threshold": SETTINGS.drift_psi_threshold, "points": MONITOR.history()}
+
+
+@app.get("/perf")
+def perf_stats() -> dict:
+    """Rolling p50/p95/p99 latency over the last 1000 inferences."""
+    return PERF.stats()
 
 
 @app.post("/score-batch", response_model=BatchScoreResponse)
