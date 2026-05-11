@@ -47,7 +47,8 @@ public class ExplainController {
                 5,        // average merchant_category
                 d.getCreatedAt().atZone(java.time.ZoneOffset.UTC).getHour(),
                 isWeekend(d.getCreatedAt()),
-                1, 0.0, 0.2, 5.0
+                1, 0.0, 0.2, 5.0,
+                d.getLat(), d.getLon(), d.getCity()
         );
         return explainer.explainSafely(reconstructed);
     }

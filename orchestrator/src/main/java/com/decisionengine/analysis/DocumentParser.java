@@ -175,7 +175,8 @@ public class DocumentParser {
                     (int) parseDouble(rec, idx, "txn_count_1h"),
                     parseDouble(rec, idx, "amount_zscore_user"),
                     parseDouble(rec, idx, "device_risk_score"),
-                    parseDouble(rec, idx, "geo_distance_km")
+                    parseDouble(rec, idx, "geo_distance_km"),
+                    null, null, null    // lat/lon/city — not in uploaded CSVs
             );
         } catch (Exception e) {
             warnings.add("Row " + rowNum + " skipped: " + e.getMessage());
